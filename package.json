@@ -1,0 +1,46 @@
+{
+  "name": "janusdoc",
+  "version": "0.1.0",
+  "description": "AI-powered documentation update suggester for PRs",
+  "type": "module",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "bin": {
+    "janusdoc": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "keywords": [
+    "documentation",
+    "cli",
+    "ai",
+    "github",
+    "pr"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/openai": "^0.0.70",
+    "@clack/prompts": "^0.8.2",
+    "@octokit/rest": "^21.0.0",
+    "ai": "^3.4.0",
+    "simple-git": "^3.27.0",
+    "yargs": "^17.7.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/yargs": "^17.0.33",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
