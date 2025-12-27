@@ -1,7 +1,7 @@
 import path from "node:path";
 import * as p from "@clack/prompts";
 import { loadConfig, loadStyleguide } from "../lib/config.js";
-import { scanDocsDirectory, summarizeDocs } from "../lib/docs.js";
+import { scanDocsDirectory } from "../lib/docs.js";
 import { getChangedFiles, getDiffPatch, filterCodeFiles } from "../lib/git.js";
 import {
   createOctokit,
@@ -11,7 +11,14 @@ import {
   upsertPRComment,
 } from "../lib/github.js";
 import { analyzeChanges } from "../lib/analyzer.js";
-import type { RunCommandOptions } from "../types.js";
+import { summarizeCodeChanges } from "../lib/summarizer.js";
+import {
+  loadEmbeddings,
+  generateEmbedding,
+  searchSimilarDocs,
+  embeddingsExist,
+} from "../lib/embeddings.js";
+import type { RunCommandOptions, DocFile } from "../types.js";
 
 /**
  * Run the documentation analysis on a PR
@@ -67,22 +74,67 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   // Scan existing docs
   spinner.start("Scanning documentation...");
   const absoluteDocsPath = path.resolve(cwd, config.docsPath);
-  const docs = await scanDocsDirectory(absoluteDocsPath);
-  const summarizedDocs = summarizeDocs(docs);
-  spinner.stop(`Found ${docs.length} documentation file(s)`);
+  const allDocs = await scanDocsDirectory(absoluteDocsPath);
+  spinner.stop(`Found ${allDocs.length} documentation file(s)`);
 
-  if (docs.length === 0) {
+  if (allDocs.length === 0) {
     p.log.warn("No documentation files found. Nothing to analyze.");
     p.outro("Done!");
     return;
   }
 
-  // Analyze changes
+  // Find relevant docs using embeddings
+  let relevantDocs: DocFile[];
+
+  if (await embeddingsExist(cwd)) {
+    // Use semantic search with embeddings
+    spinner.start("Summarizing code changes...");
+    const changeSummary = await summarizeCodeChanges(diff);
+    spinner.stop(`Summary: ${changeSummary.slice(0, 100)}...`);
+
+    spinner.start("Finding relevant documentation...");
+    const summaryEmbedding = await generateEmbedding(changeSummary);
+    const embeddingsStore = await loadEmbeddings(cwd);
+    const searchResults = searchSimilarDocs(
+      summaryEmbedding,
+      embeddingsStore.documents,
+      5, // top 5 docs
+      0.5 // similarity threshold
+    );
+
+    // Map search results back to full doc content
+    relevantDocs = searchResults
+      .map((result) => allDocs.find((doc) => doc.path === result.path))
+      .filter((doc): doc is DocFile => doc !== undefined);
+
+    spinner.stop(
+      `Found ${relevantDocs.length} relevant doc(s) via semantic search`
+    );
+
+    if (relevantDocs.length > 0) {
+      const docsList = relevantDocs.map((d) => `• ${d.path}`).join("\n");
+      p.log.info(`Relevant docs:\n${docsList}`);
+    }
+  } else {
+    // Fallback: use all docs (legacy behavior)
+    p.log.warn(
+      "No embeddings found. Using all docs (run 'janusdoc init' to enable semantic search)."
+    );
+    relevantDocs = allDocs;
+  }
+
+  if (relevantDocs.length === 0) {
+    p.log.success("No relevant documentation found for these changes.");
+    p.outro("Done!");
+    return;
+  }
+
+  // Analyze changes with relevant docs only
   spinner.start("Analyzing changes with AI...");
   const result = await analyzeChanges(
     diff,
     codeFiles,
-    summarizedDocs,
+    relevantDocs,
     styleguide
   );
   spinner.stop(result.summary);

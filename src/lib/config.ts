@@ -5,6 +5,7 @@ import type { JanusDocConfig } from '../types.js';
 const CONFIG_FILE = '.janusdoc.json';
 const CONFIG_DIR = '.janusdoc';
 const STYLEGUIDE_FILE = 'auto_styleguide.md';
+const EMBEDDINGS_FILE = 'embeddings.json';
 
 /**
  * Get the path to the config file
@@ -25,6 +26,13 @@ export function getConfigDirPath(cwd: string = process.cwd()): string {
  */
 export function getStyleguidePath(cwd: string = process.cwd()): string {
   return path.join(cwd, CONFIG_DIR, STYLEGUIDE_FILE);
+}
+
+/**
+ * Get the path to the embeddings file
+ */
+export function getEmbeddingsPath(cwd: string = process.cwd()): string {
+  return path.join(cwd, CONFIG_DIR, EMBEDDINGS_FILE);
 }
 
 /**

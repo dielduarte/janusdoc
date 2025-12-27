@@ -4,6 +4,7 @@ import * as p from "@clack/prompts";
 import { saveConfig, saveStyleguide, configExists } from "../lib/config.js";
 import { scanDocsDirectory, summarizeDocs } from "../lib/docs.js";
 import { generateStyleguide } from "../lib/styleguide-generator.js";
+import { generateDocEmbeddings, saveEmbeddings } from "../lib/embeddings.js";
 import type { InitCommandOptions, JanusDocConfig } from "../types.js";
 
 /**
@@ -124,13 +125,14 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
   await saveConfig(config, cwd);
   p.log.success("Created .janusdoc.json");
 
-  // Scan docs and generate styleguide
+  // Scan docs
   const spinner = p.spinner();
 
   spinner.start("Scanning documentation...");
   const docs = await scanDocsDirectory(absoluteDocsPath);
   spinner.stop(`Found ${docs.length} documentation file(s)`);
 
+  // Generate style guide
   spinner.start("Generating style guide with AI...");
   const summarized = summarizeDocs(docs);
 
@@ -142,7 +144,7 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
     if ((error as Error).message?.includes("API key")) {
       spinner.stop("OpenAI API key not found");
       p.log.warn(
-        "Set OPENAI_API_KEY environment variable for AI-powered style guide generation."
+        "Set OPENAI_API_KEY environment variable for AI-powered features."
       );
       p.log.info("Using default style guide instead.");
 
@@ -156,6 +158,28 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
     } else {
       spinner.stop("Failed to generate style guide");
       throw error;
+    }
+  }
+
+  // Generate embeddings for semantic search
+  if (docs.length > 0) {
+    spinner.start("Generating embeddings for semantic search...");
+    try {
+      const embeddedDocs = await generateDocEmbeddings(docs);
+      await saveEmbeddings(embeddedDocs, cwd);
+      spinner.stop(
+        `Created .janusdoc/embeddings.json (${docs.length} docs embedded)`
+      );
+    } catch (error) {
+      if ((error as Error).message?.includes("API key")) {
+        spinner.stop("Skipped embeddings (no API key)");
+        p.log.warn(
+          "Embeddings require OPENAI_API_KEY. Semantic search will be disabled."
+        );
+      } else {
+        spinner.stop("Failed to generate embeddings");
+        throw error;
+      }
     }
   }
 

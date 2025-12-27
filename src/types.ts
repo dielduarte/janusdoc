@@ -42,7 +42,6 @@ export interface DocUpdateSuggestion {
   docPath: string;
   reason: string;
   suggestedChanges: string;
-  relatedCodeFiles: string[];
 }
 
 /**
@@ -68,4 +67,3 @@ export interface RunCommandOptions {
 export interface InitCommandOptions {
   docsPath?: string;
 }
-
