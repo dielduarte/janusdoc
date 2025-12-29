@@ -95,8 +95,9 @@ export function formatComment(result: AnalysisResult): string {
   for (const suggestion of result.suggestions) {
     comment += `### 📄 \`${suggestion.docPath}\`\n\n`;
     comment += `**Reason:** ${suggestion.reason}\n\n`;
-    comment += `**Suggested changes:**\n${suggestion.suggestedChanges}\n\n`;
-
+    comment += `<details>\n<summary>📝 Suggested updated content (click to expand)</summary>\n\n`;
+    comment += `\`\`\`markdown\n${suggestion.updatedContent}\n\`\`\`\n\n`;
+    comment += `</details>\n\n`;
     comment += "---\n\n";
   }
 

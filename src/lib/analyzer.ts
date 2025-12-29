@@ -5,12 +5,12 @@ import type { DocFile, ChangedFile, AnalysisResult, DocUpdateSuggestion } from "
 
 const SuggestionSchema = z.object({
   docPath: z.string().describe("Path to the documentation file that needs updating"),
-  reason: z
+  reason: z.string().describe("Brief explanation of why this documentation needs to be updated"),
+  updatedContent: z
     .string()
-    .describe("Why this documentation needs to be updated based on the code changes"),
-  suggestedChanges: z
-    .string()
-    .describe("Specific suggestions for what to update in the documentation"),
+    .describe(
+      "The complete updated documentation content. Write the full updated section or document, not just a description of changes.",
+    ),
 });
 
 const AnalysisResultSchema = z.object({
@@ -18,7 +18,7 @@ const AnalysisResultSchema = z.object({
   summary: z.string().describe("Brief summary of the analysis results"),
 });
 
-const ANALYSIS_PROMPT = `You are a documentation expert. Your task is to analyze code changes and determine which of the provided documentation files need to be updated.
+const ANALYSIS_PROMPT = `You are a documentation expert. Your task is to analyze code changes and write updated documentation for any affected files.
 
 ## Style Guide
 The project follows this documentation style guide:
@@ -38,13 +38,15 @@ These documentation files were identified as potentially relevant to the code ch
 
 ## Instructions
 1. Analyze the code changes carefully
-2. For each provided documentation file, determine if it needs updating based on the code changes
-3. Consider: API changes, configuration changes, behavior changes, new features that modify existing functionality
-4. For each affected doc, explain WHY it needs updating and WHAT should be changed
-5. Only suggest updates for docs that are genuinely affected - don't suggest updates just because a file is listed
+2. For each documentation file that needs updating based on the code changes:
+   - Explain briefly WHY it needs updating
+   - Write the ACTUAL UPDATED DOCUMENTATION content (not just a description of what to change)
+3. Consider: API changes, configuration changes, behavior changes, new features
+4. Follow the style guide when writing the updated content
+5. Only suggest updates for docs that are genuinely affected
 6. If no documentation needs updating, return an empty suggestions array
 
-Be specific and actionable in your suggestions.`;
+IMPORTANT: The "updatedContent" field should contain the actual new/updated documentation text that can be directly used, not a description of what to change.`;
 
 /**
  * Analyze code changes and determine which docs need updating

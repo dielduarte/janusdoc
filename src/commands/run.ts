@@ -49,7 +49,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   // Get changed files
   spinner.start("Getting changed files...");
-  const allChangedFiles = await getChangedFiles(prInfo.baseBranch, "HEAD", cwd);
+  const allChangedFiles = await getChangedFiles(prInfo.baseBranch, prInfo.headBranch, cwd);
   const codeFiles = filterCodeFiles(allChangedFiles);
   spinner.stop(`Found ${allChangedFiles.length} changed files (${codeFiles.length} code files)`);
 
@@ -63,7 +63,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   spinner.start("Getting diff...");
   const diff = await getDiffPatch(
     prInfo.baseBranch,
-    "HEAD",
+    prInfo.headBranch,
     codeFiles.map((f) => f.path),
     cwd,
   );
@@ -138,7 +138,9 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     spinner.stop("Comment posted successfully!");
 
     // Show suggestions summary
-    const suggestionsList = result.suggestions.map((s) => `• ${s.docPath}: ${s.reason}`).join("\n");
+    const suggestionsList = result.suggestions
+      .map((s) => `• ${s.docPath}: ${s.updatedContent}`)
+      .join("\n");
     p.note(suggestionsList, "Suggested Updates");
   } else {
     p.log.success("No documentation updates needed.");

@@ -41,7 +41,7 @@ export interface DocFile {
 export interface DocUpdateSuggestion {
   docPath: string;
   reason: string;
-  suggestedChanges: string;
+  updatedContent: string;
 }
 
 /**

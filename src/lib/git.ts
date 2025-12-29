@@ -13,20 +13,21 @@ export function createGit(cwd: string = process.cwd()): SimpleGit {
  */
 export async function getChangedFiles(
   baseBranch: string,
-  headBranch: string = "HEAD",
+  headBranch: string,
   cwd: string = process.cwd(),
 ): Promise<ChangedFile[]> {
   const git = createGit(cwd);
 
-  // Fetch the base branch to ensure we have the latest
+  // Fetch both branches to ensure we have the latest
   try {
     await git.fetch("origin", baseBranch);
+    await git.fetch("origin", headBranch);
   } catch {
     // Ignore fetch errors (might be running locally without remote)
   }
 
-  // Get diff between base and head
-  const diffSummary = await git.diffSummary([`origin/${baseBranch}...${headBranch}`]);
+  // Get diff between base and head (both from origin)
+  const diffSummary = await git.diffSummary([`origin/${baseBranch}...origin/${headBranch}`]);
 
   const changedFiles: ChangedFile[] = diffSummary.files.map((file) => ({
     path: file.file,
@@ -42,13 +43,14 @@ export async function getChangedFiles(
  */
 export async function getDiffPatch(
   baseBranch: string,
-  headBranch: string = "HEAD",
+  headBranch: string,
   files?: string[],
   cwd: string = process.cwd(),
 ): Promise<string> {
   const git = createGit(cwd);
 
-  const args = [`origin/${baseBranch}...${headBranch}`];
+  // Compare origin branches
+  const args = [`origin/${baseBranch}...origin/${headBranch}`];
 
   if (files && files.length > 0) {
     args.push("--", ...files);

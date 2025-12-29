@@ -37,7 +37,8 @@ describe("github utilities", () => {
           {
             docPath: "docs/api.md",
             reason: "The API function signature changed",
-            suggestedChanges: "Update the parameter documentation",
+            updatedContent:
+              "# API Reference\n\nThe `getUser` function now accepts an `options` object.",
           },
         ],
       };
@@ -47,7 +48,8 @@ describe("github utilities", () => {
       expect(comment).toContain("## 📚 JanusDoc");
       expect(comment).toContain("docs/api.md");
       expect(comment).toContain("The API function signature changed");
-      expect(comment).toContain("src/api.ts");
+      expect(comment).toContain("# API Reference");
+      expect(comment).toContain("<details>");
     });
 
     it("handles multiple suggestions", () => {
@@ -57,12 +59,12 @@ describe("github utilities", () => {
           {
             docPath: "docs/api.md",
             reason: "API changed",
-            suggestedChanges: "Update API docs",
+            updatedContent: "# API\n\nUpdated API documentation.",
           },
           {
             docPath: "docs/config.md",
             reason: "Config options changed",
-            suggestedChanges: "Update config docs",
+            updatedContent: "# Config\n\nUpdated config documentation.",
           },
         ],
       };
