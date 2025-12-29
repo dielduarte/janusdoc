@@ -88,16 +88,27 @@ export async function analyzeChanges(
     .replace("{diff}", truncateContent(diff, 10000))
     .replace("{changedFiles}", changedFilesFormatted);
 
-  const { object } = await generateObject({
-    model: openai("gpt-4o-mini"),
-    schema: AnalysisResultSchema,
-    prompt,
-  });
+  try {
+    const { object } = await generateObject({
+      model: openai("gpt-4o-mini"),
+      schema: AnalysisResultSchema,
+      prompt,
+    });
 
-  return {
-    suggestions: object.suggestions as DocUpdateSuggestion[],
-    summary: object.summary,
-  };
+    return {
+      suggestions: object.suggestions as DocUpdateSuggestion[],
+      summary: object.summary || "Analysis completed.",
+    };
+  } catch (error: any) {
+    // If validation fails, try to extract partial results
+    if (error.value && error.value.suggestions) {
+      return {
+        suggestions: error.value.suggestions as DocUpdateSuggestion[],
+        summary: error.value.summary || "Analysis completed with validation errors.",
+      };
+    }
+    throw error;
+  }
 }
 
 /**
