@@ -4,6 +4,14 @@
 
 # Janusdoc
 
+<p align="center">
+  <a href="#installation">Installation</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#commands">Commands</a> •
+  <a href="#cicd-integration">CI/CD</a> •
+  <a href="https://github.com/dielduarte/janusdoc-evals">Evaluation Suite</a>
+</p>
+
 AI-powered documentation update suggester for pull requests. JanusDoc analyzes code changes in your PRs and automatically suggests documentation updates based on your project's existing docs and style guide.
 
 ## Installation
