@@ -50,6 +50,11 @@ yargs(hideBin(process.argv))
           alias: "t",
           type: "string",
           description: "GitHub token (defaults to GITHUB_TOKEN env var)",
+        })
+        .option("dry-run", {
+          type: "boolean",
+          description: "Output suggestions as JSON without posting to GitHub",
+          default: false,
         });
     },
     async (argv) => {
@@ -58,6 +63,7 @@ yargs(hideBin(process.argv))
           pr: argv.pr,
           repo: argv.repo,
           token: argv.token,
+          dryRun: argv.dryRun,
         });
       } catch (error) {
         console.error("\n❌ Error:", (error as Error).message);

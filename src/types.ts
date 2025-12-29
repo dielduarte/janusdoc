@@ -59,6 +59,7 @@ export interface RunCommandOptions {
   pr: number;
   repo: string;
   token?: string;
+  dryRun?: boolean;
 }
 
 /**

@@ -130,6 +130,26 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const result = await analyzeChanges(diff, codeFiles, relevantDocs, styleguide);
   spinner.stop(result.summary);
 
+  // If dry-run mode, output JSON and exit
+  if (options.dryRun) {
+    const output = {
+      summary: result.summary,
+      suggestions: result.suggestions.map((s) => ({
+        file: s.docPath,
+        reason: s.reason,
+        updatedContent: s.updatedContent,
+      })),
+      metadata: {
+        pr: options.pr,
+        repo: options.repo,
+        filesChanged: codeFiles.map((f) => f.path),
+        totalSuggestions: result.suggestions.length,
+      },
+    };
+    console.log(JSON.stringify(output, null, 2));
+    return;
+  }
+
   // Post comment if there are suggestions
   if (result.suggestions.length > 0) {
     spinner.start(`Posting comment with ${result.suggestions.length} suggestion(s)...`);
