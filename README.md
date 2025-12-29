@@ -104,6 +104,30 @@ After running `janusdoc init`, a `.janusdoc.json` file is created:
 }
 ```
 
+### Configuration Options
+
+| Option             | Type   | Default  | Description                                                       |
+| ------------------ | ------ | -------- | ----------------------------------------------------------------- |
+| `docsPath`         | string | `"docs"` | Path to your documentation directory                              |
+| `search.topN`      | number | `10`     | Maximum number of relevant docs to consider during analysis       |
+| `search.threshold` | number | `0.3`    | Minimum similarity score (0-1) for docs to be considered relevant |
+
+**Example with all options:**
+
+```json
+{
+  "docsPath": "documentation",
+  "search": {
+    "topN": 5,
+    "threshold": 0.5
+  }
+}
+```
+
+> **Tip:** Lower the `threshold` if JanusDoc is missing relevant docs. Raise it if you're getting too many false positives.
+
+### Generated Files
+
 JanusDoc also creates a `.janusdoc/` directory containing:
 
 - `auto_styleguide.md` - Auto-generated documentation style guide (can be customized)

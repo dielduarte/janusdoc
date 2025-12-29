@@ -3,6 +3,10 @@
  */
 export interface JanusDocConfig {
   docsPath: string;
+  search?: {
+    topN?: number; // Max docs to consider (default: 10)
+    threshold?: number; // Similarity threshold (default: 0.3)
+  };
 }
 
 /**

@@ -101,8 +101,8 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     const searchResults = searchSimilarDocs(
       summaryEmbedding,
       embeddingsStore.documents,
-      5, // top 5 docs
-      0.5, // similarity threshold
+      config.search?.topN,
+      config.search?.threshold,
     );
 
     // Map search results back to full doc content

@@ -99,6 +99,7 @@ export async function analyzeChanges(
       suggestions: object.suggestions as DocUpdateSuggestion[],
       summary: object.summary || "Analysis completed.",
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // If validation fails, try to extract partial results
     if (error.value && error.value.suggestions) {

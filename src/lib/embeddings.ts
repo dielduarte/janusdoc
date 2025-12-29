@@ -8,7 +8,7 @@ const EMBEDDING_MODEL = "text-embedding-3-small";
 const CHUNK_SIZE = 500; // ~500 tokens per chunk
 const CHUNK_OVERLAP = 50; // Overlap between chunks
 const DEFAULT_TOP_N = 5;
-const DEFAULT_SIMILARITY_THRESHOLD = 0.5;
+const DEFAULT_SIMILARITY_THRESHOLD = 0.3;
 
 /**
  * A chunk of a document with its embedding

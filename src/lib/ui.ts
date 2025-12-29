@@ -1,7 +1,7 @@
 /**
  * UI module that provides real or mocked prompts based on context
  */
-import * as p from '@clack/prompts';
+import * as p from "@clack/prompts";
 
 // Check if we're in silent mode (set by commands)
 let silentMode = false;
