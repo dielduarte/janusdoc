@@ -21,6 +21,7 @@ npx janusdoc [command]
 ## Quick Start
 
 1. Initialize JanusDoc in your project:
+
    ```bash
    janusdoc init
    ```
@@ -35,6 +36,7 @@ npx janusdoc [command]
 ### `janusdoc init`
 
 Initialize JanusDoc in your current project. This command will:
+
 - Detect or create your documentation directory
 - Generate a `.janusdoc.json` configuration file
 - Scan your existing documentation
@@ -42,15 +44,18 @@ Initialize JanusDoc in your current project. This command will:
 - Create embeddings for semantic search
 
 **Options:**
+
 - `-d, --docs-path <path>` - Path to documentation directory (default: auto-detected or "docs")
 
 **Example:**
+
 ```bash
 janusdoc init
 janusdoc init --docs-path documentation
 ```
 
 **Environment Variables:**
+
 - `OPENAI_API_KEY` - Required for AI-powered features (style guide generation and semantic search)
 
 ### `janusdoc run`
@@ -58,13 +63,16 @@ janusdoc init --docs-path documentation
 Analyze a pull request and suggest documentation updates. Posts a comment on the PR with suggestions if documentation updates are needed.
 
 **Required Options:**
+
 - `-p, --pr <number>` - Pull request number
 - `-r, --repo <owner/repo>` - Repository in owner/repo format
 
 **Optional:**
+
 - `-t, --token <token>` - GitHub token (defaults to `GITHUB_TOKEN` environment variable)
 
 **Example:**
+
 ```bash
 # Using GITHUB_TOKEN from environment
 janusdoc run --pr 42 --repo myorg/myproject
@@ -74,6 +82,7 @@ janusdoc run --pr 42 --repo myorg/myproject --token ghp_xxxxx
 ```
 
 **Environment Variables:**
+
 - `GITHUB_TOKEN` - GitHub personal access token with repo access
 - `OPENAI_API_KEY` - Required for AI-powered analysis
 
@@ -88,6 +97,7 @@ After running `janusdoc init`, a `.janusdoc.json` file is created:
 ```
 
 JanusDoc also creates a `.janusdoc/` directory containing:
+
 - `auto_styleguide.md` - Auto-generated documentation style guide (can be customized)
 - `embeddings.json` - Vector embeddings for semantic search
 
@@ -119,7 +129,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Run JanusDoc
         env:
@@ -137,4 +147,4 @@ jobs:
 
 ## License
 
-MIT
+https://osaasy.dev/
