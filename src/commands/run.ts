@@ -51,9 +51,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   spinner.start("Getting changed files...");
   const allChangedFiles = await getChangedFiles(prInfo.baseBranch, "HEAD", cwd);
   const codeFiles = filterCodeFiles(allChangedFiles);
-  spinner.stop(
-    `Found ${allChangedFiles.length} changed files (${codeFiles.length} code files)`
-  );
+  spinner.stop(`Found ${allChangedFiles.length} changed files (${codeFiles.length} code files)`);
 
   if (codeFiles.length === 0) {
     p.log.success("No code changes detected. Nothing to analyze.");
@@ -67,7 +65,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     prInfo.baseBranch,
     "HEAD",
     codeFiles.map((f) => f.path),
-    cwd
+    cwd,
   );
   spinner.stop("Diff retrieved");
 
@@ -99,7 +97,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
       summaryEmbedding,
       embeddingsStore.documents,
       5, // top 5 docs
-      0.5 // similarity threshold
+      0.5, // similarity threshold
     );
 
     // Map search results back to full doc content
@@ -107,9 +105,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
       .map((result) => allDocs.find((doc) => doc.path === result.path))
       .filter((doc): doc is DocFile => doc !== undefined);
 
-    spinner.stop(
-      `Found ${relevantDocs.length} relevant doc(s) via semantic search`
-    );
+    spinner.stop(`Found ${relevantDocs.length} relevant doc(s) via semantic search`);
 
     if (relevantDocs.length > 0) {
       const docsList = relevantDocs.map((d) => `• ${d.path}`).join("\n");
@@ -118,7 +114,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   } else {
     // Fallback: use all docs (legacy behavior)
     p.log.warn(
-      "No embeddings found. Using all docs (run 'janusdoc init' to enable semantic search)."
+      "No embeddings found. Using all docs (run 'janusdoc init' to enable semantic search).",
     );
     relevantDocs = allDocs;
   }
@@ -131,27 +127,18 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   // Analyze changes with relevant docs only
   spinner.start("Analyzing changes with AI...");
-  const result = await analyzeChanges(
-    diff,
-    codeFiles,
-    relevantDocs,
-    styleguide
-  );
+  const result = await analyzeChanges(diff, codeFiles, relevantDocs, styleguide);
   spinner.stop(result.summary);
 
   // Post comment if there are suggestions
   if (result.suggestions.length > 0) {
-    spinner.start(
-      `Posting comment with ${result.suggestions.length} suggestion(s)...`
-    );
+    spinner.start(`Posting comment with ${result.suggestions.length} suggestion(s)...`);
     const comment = formatComment(result);
     await upsertPRComment(octokit, owner, repo, options.pr, comment);
     spinner.stop("Comment posted successfully!");
 
     // Show suggestions summary
-    const suggestionsList = result.suggestions
-      .map((s) => `• ${s.docPath}: ${s.reason}`)
-      .join("\n");
+    const suggestionsList = result.suggestions.map((s) => `• ${s.docPath}: ${s.reason}`).join("\n");
     p.note(suggestionsList, "Suggested Updates");
   } else {
     p.log.success("No documentation updates needed.");

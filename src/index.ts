@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-import { initCommand } from './commands/init.js';
-import { runCommand } from './commands/run.js';
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { initCommand } from "./commands/init.js";
+import { runCommand } from "./commands/run.js";
 
 yargs(hideBin(process.argv))
-  .scriptName('janusdoc')
-  .usage('$0 <command> [options]')
+  .scriptName("janusdoc")
+  .usage("$0 <command> [options]")
   .command(
-    'init',
-    'Initialize JanusDoc in the current project',
+    "init",
+    "Initialize JanusDoc in the current project",
     (yargs) => {
-      return yargs.option('docs-path', {
-        alias: 'd',
-        type: 'string',
-        description: 'Path to documentation directory',
+      return yargs.option("docs-path", {
+        alias: "d",
+        type: "string",
+        description: "Path to documentation directory",
       });
     },
     async (argv) => {
@@ -24,32 +24,32 @@ yargs(hideBin(process.argv))
           docsPath: argv.docsPath,
         });
       } catch (error) {
-        console.error('\n❌ Error:', (error as Error).message);
+        console.error("\n❌ Error:", (error as Error).message);
         process.exit(1);
       }
-    }
+    },
   )
   .command(
-    'run',
-    'Analyze a PR and suggest documentation updates',
+    "run",
+    "Analyze a PR and suggest documentation updates",
     (yargs) => {
       return yargs
-        .option('pr', {
-          alias: 'p',
-          type: 'number',
-          description: 'Pull request number',
+        .option("pr", {
+          alias: "p",
+          type: "number",
+          description: "Pull request number",
           demandOption: true,
         })
-        .option('repo', {
-          alias: 'r',
-          type: 'string',
-          description: 'Repository in owner/repo format',
+        .option("repo", {
+          alias: "r",
+          type: "string",
+          description: "Repository in owner/repo format",
           demandOption: true,
         })
-        .option('token', {
-          alias: 't',
-          type: 'string',
-          description: 'GitHub token (defaults to GITHUB_TOKEN env var)',
+        .option("token", {
+          alias: "t",
+          type: "string",
+          description: "GitHub token (defaults to GITHUB_TOKEN env var)",
         });
     },
     async (argv) => {
@@ -60,16 +60,15 @@ yargs(hideBin(process.argv))
           token: argv.token,
         });
       } catch (error) {
-        console.error('\n❌ Error:', (error as Error).message);
+        console.error("\n❌ Error:", (error as Error).message);
         process.exit(1);
       }
-    }
+    },
   )
-  .demandCommand(1, 'You need to specify a command')
+  .demandCommand(1, "You need to specify a command")
   .strict()
   .help()
-  .alias('h', 'help')
+  .alias("h", "help")
   .version()
-  .alias('v', 'version')
+  .alias("v", "version")
   .parse();
-

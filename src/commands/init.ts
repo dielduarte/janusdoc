@@ -143,15 +143,11 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
   } catch (error) {
     if ((error as Error).message?.includes("API key")) {
       spinner.stop("OpenAI API key not found");
-      p.log.warn(
-        "Set OPENAI_API_KEY environment variable for AI-powered features."
-      );
+      p.log.warn("Set OPENAI_API_KEY environment variable for AI-powered features.");
       p.log.info("Using default style guide instead.");
 
       // Save default styleguide
-      const { generateStyleguide: gen } = await import(
-        "../lib/styleguide-generator.js"
-      );
+      const { generateStyleguide: gen } = await import("../lib/styleguide-generator.js");
       const defaultGuide = await gen([]);
       await saveStyleguide(defaultGuide, cwd);
       p.log.success("Created .janusdoc/auto_styleguide.md (default)");
@@ -167,15 +163,11 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
     try {
       const embeddedDocs = await generateDocEmbeddings(docs);
       await saveEmbeddings(embeddedDocs, cwd);
-      spinner.stop(
-        `Created .janusdoc/embeddings.json (${docs.length} docs embedded)`
-      );
+      spinner.stop(`Created .janusdoc/embeddings.json (${docs.length} docs embedded)`);
     } catch (error) {
       if ((error as Error).message?.includes("API key")) {
         spinner.stop("Skipped embeddings (no API key)");
-        p.log.warn(
-          "Embeddings require OPENAI_API_KEY. Semantic search will be disabled."
-        );
+        p.log.warn("Embeddings require OPENAI_API_KEY. Semantic search will be disabled.");
       } else {
         spinner.stop("Failed to generate embeddings");
         throw error;
@@ -185,7 +177,7 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
 
   p.note(
     `1. Review and customize .janusdoc/auto_styleguide.md\n2. Add janusdoc to your CI/CD pipeline:\n   janusdoc run --pr <number> --repo <owner/repo>`,
-    "Next steps"
+    "Next steps",
   );
 
   p.outro("✨ JanusDoc initialized successfully!");

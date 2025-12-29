@@ -50,21 +50,21 @@ export interface SearchResult {
 export function chunkText(text: string, chunkSize = CHUNK_SIZE, overlap = CHUNK_OVERLAP): string[] {
   const words = text.split(/\s+/);
   const chunks: string[] = [];
-  
+
   if (words.length <= chunkSize) {
     return [text];
   }
-  
+
   let start = 0;
   while (start < words.length) {
     const end = Math.min(start + chunkSize, words.length);
     const chunk = words.slice(start, end).join(" ");
     chunks.push(chunk);
-    
+
     if (end >= words.length) break;
     start = end - overlap;
   }
-  
+
   return chunks;
 }
 
@@ -76,7 +76,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     model: openai.embedding(EMBEDDING_MODEL),
     value: text,
   });
-  
+
   return embedding;
 }
 
@@ -85,12 +85,12 @@ export async function generateEmbedding(text: string): Promise<number[]> {
  */
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  
+
   const { embeddings } = await embedMany({
     model: openai.embedding(EMBEDDING_MODEL),
     values: texts,
   });
-  
+
   return embeddings;
 }
 
@@ -99,11 +99,11 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
  */
 export async function generateDocEmbeddings(docs: DocFile[]): Promise<EmbeddedDoc[]> {
   const embeddedDocs: EmbeddedDoc[] = [];
-  
+
   for (const doc of docs) {
     const chunks = chunkText(doc.content);
     const embeddings = await generateEmbeddings(chunks);
-    
+
     embeddedDocs.push({
       path: doc.path,
       chunks: chunks.map((content, i) => ({
@@ -112,7 +112,7 @@ export async function generateDocEmbeddings(docs: DocFile[]): Promise<EmbeddedDo
       })),
     });
   }
-  
+
   return embeddedDocs;
 }
 
@@ -123,21 +123,21 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
     throw new Error("Vectors must have the same length");
   }
-  
+
   let dotProduct = 0;
   let normA = 0;
   let normB = 0;
-  
+
   for (let i = 0; i < a.length; i++) {
     dotProduct += a[i] * b[i];
     normA += a[i] * a[i];
     normB += b[i] * b[i];
   }
-  
+
   const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
-  
+
   if (magnitude === 0) return 0;
-  
+
   return dotProduct / magnitude;
 }
 
@@ -148,15 +148,15 @@ export function searchSimilarDocs(
   queryEmbedding: number[],
   embeddedDocs: EmbeddedDoc[],
   topN = DEFAULT_TOP_N,
-  threshold = DEFAULT_SIMILARITY_THRESHOLD
+  threshold = DEFAULT_SIMILARITY_THRESHOLD,
 ): SearchResult[] {
   const results: SearchResult[] = [];
-  
+
   // Calculate similarity for each chunk
   for (const doc of embeddedDocs) {
     for (const chunk of doc.chunks) {
       const similarity = cosineSimilarity(queryEmbedding, chunk.embedding);
-      
+
       if (similarity >= threshold) {
         results.push({
           path: doc.path,
@@ -166,21 +166,21 @@ export function searchSimilarDocs(
       }
     }
   }
-  
+
   // Sort by similarity descending
   results.sort((a, b) => b.similarity - a.similarity);
-  
+
   // Deduplicate by path, keeping highest similarity
   const seen = new Set<string>();
   const deduped: SearchResult[] = [];
-  
+
   for (const result of results) {
     if (!seen.has(result.path)) {
       seen.add(result.path);
       deduped.push(result);
     }
   }
-  
+
   return deduped.slice(0, topN);
 }
 
@@ -189,20 +189,20 @@ export function searchSimilarDocs(
  */
 export async function saveEmbeddings(
   embeddedDocs: EmbeddedDoc[],
-  cwd: string = process.cwd()
+  cwd: string = process.cwd(),
 ): Promise<void> {
   const configDir = getConfigDirPath(cwd);
   const embeddingsPath = getEmbeddingsPath(cwd);
-  
+
   // Ensure .janusdoc directory exists
   await fs.mkdir(configDir, { recursive: true });
-  
+
   const store: EmbeddingsStore = {
     model: EMBEDDING_MODEL,
     generatedAt: new Date().toISOString(),
     documents: embeddedDocs,
   };
-  
+
   await fs.writeFile(embeddingsPath, JSON.stringify(store), "utf-8");
 }
 
@@ -211,7 +211,7 @@ export async function saveEmbeddings(
  */
 export async function loadEmbeddings(cwd: string = process.cwd()): Promise<EmbeddingsStore> {
   const embeddingsPath = getEmbeddingsPath(cwd);
-  
+
   try {
     const content = await fs.readFile(embeddingsPath, "utf-8");
     return JSON.parse(content) as EmbeddingsStore;
@@ -234,4 +234,3 @@ export async function embeddingsExist(cwd: string = process.cwd()): Promise<bool
     return false;
   }
 }
-

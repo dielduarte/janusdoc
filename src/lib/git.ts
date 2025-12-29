@@ -1,5 +1,5 @@
-import { simpleGit, SimpleGit } from 'simple-git';
-import type { ChangedFile } from '../types.js';
+import { simpleGit, SimpleGit } from "simple-git";
+import type { ChangedFile } from "../types.js";
 
 /**
  * Create a simple-git instance
@@ -13,25 +13,25 @@ export function createGit(cwd: string = process.cwd()): SimpleGit {
  */
 export async function getChangedFiles(
   baseBranch: string,
-  headBranch: string = 'HEAD',
-  cwd: string = process.cwd()
+  headBranch: string = "HEAD",
+  cwd: string = process.cwd(),
 ): Promise<ChangedFile[]> {
   const git = createGit(cwd);
-  
+
   // Fetch the base branch to ensure we have the latest
   try {
-    await git.fetch('origin', baseBranch);
+    await git.fetch("origin", baseBranch);
   } catch {
     // Ignore fetch errors (might be running locally without remote)
   }
 
   // Get diff between base and head
   const diffSummary = await git.diffSummary([`origin/${baseBranch}...${headBranch}`]);
-  
-  const changedFiles: ChangedFile[] = diffSummary.files.map(file => ({
+
+  const changedFiles: ChangedFile[] = diffSummary.files.map((file) => ({
     path: file.file,
-    additions: 'insertions' in file ? file.insertions : 0,
-    deletions: 'deletions' in file ? file.deletions : 0,
+    additions: "insertions" in file ? file.insertions : 0,
+    deletions: "deletions" in file ? file.deletions : 0,
   }));
 
   return changedFiles;
@@ -42,16 +42,16 @@ export async function getChangedFiles(
  */
 export async function getDiffPatch(
   baseBranch: string,
-  headBranch: string = 'HEAD',
+  headBranch: string = "HEAD",
   files?: string[],
-  cwd: string = process.cwd()
+  cwd: string = process.cwd(),
 ): Promise<string> {
   const git = createGit(cwd);
-  
+
   const args = [`origin/${baseBranch}...${headBranch}`];
-  
+
   if (files && files.length > 0) {
-    args.push('--', ...files);
+    args.push("--", ...files);
   }
 
   const diff = await git.diff(args);
@@ -63,7 +63,7 @@ export async function getDiffPatch(
  */
 export async function getCurrentBranch(cwd: string = process.cwd()): Promise<string> {
   const git = createGit(cwd);
-  const branch = await git.revparse(['--abbrev-ref', 'HEAD']);
+  const branch = await git.revparse(["--abbrev-ref", "HEAD"]);
   return branch.trim();
 }
 
@@ -72,14 +72,34 @@ export async function getCurrentBranch(cwd: string = process.cwd()): Promise<str
  */
 export function filterCodeFiles(files: ChangedFile[]): ChangedFile[] {
   const codeExtensions = [
-    '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-    '.py', '.rb', '.go', '.rs', '.java', '.kt',
-    '.c', '.cpp', '.h', '.hpp', '.cs', '.swift',
-    '.vue', '.svelte', '.astro',
-    '.json', '.yaml', '.yml', '.toml',
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".py",
+    ".rb",
+    ".go",
+    ".rs",
+    ".java",
+    ".kt",
+    ".c",
+    ".cpp",
+    ".h",
+    ".hpp",
+    ".cs",
+    ".swift",
+    ".vue",
+    ".svelte",
+    ".astro",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
   ];
-  
-  return files.filter(file => {
+
+  return files.filter((file) => {
     const ext = file.path.toLowerCase().match(/\.[^.]+$/)?.[0];
     return ext && codeExtensions.includes(ext);
   });
@@ -89,9 +109,9 @@ export function filterCodeFiles(files: ChangedFile[]): ChangedFile[] {
  * Filter to only get documentation files that changed
  */
 export function filterDocFiles(files: ChangedFile[]): ChangedFile[] {
-  const docExtensions = ['.md', '.mdx', '.rst', '.txt'];
-  
-  return files.filter(file => {
+  const docExtensions = [".md", ".mdx", ".rst", ".txt"];
+
+  return files.filter((file) => {
     const ext = file.path.toLowerCase().match(/\.[^.]+$/)?.[0];
     return ext && docExtensions.includes(ext);
   });

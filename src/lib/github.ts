@@ -9,7 +9,7 @@ export function createOctokit(token?: string): Octokit {
 
   if (!auth) {
     throw new Error(
-      "GitHub token not found. Set GITHUB_TOKEN environment variable or use --token flag."
+      "GitHub token not found. Set GITHUB_TOKEN environment variable or use --token flag.",
     );
   }
 
@@ -36,7 +36,7 @@ export async function getPRInfo(
   octokit: Octokit,
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<PRInfo> {
   try {
     const { data: pr } = await octokit.pulls.get({
@@ -62,20 +62,18 @@ export async function getPRInfo(
           `   Possible causes:\n` +
           `   - The PR number or repository name is incorrect\n` +
           `   - The repository is private and your token doesn't have access\n` +
-          `   - Your token needs the 'repo' scope for private repositories`
+          `   - Your token needs the 'repo' scope for private repositories`,
       );
     }
 
     if (status === 401) {
-      throw new Error(
-        `Authentication failed. Your GitHub token may be invalid or expired.`
-      );
+      throw new Error(`Authentication failed. Your GitHub token may be invalid or expired.`);
     }
 
     if (status === 403) {
       throw new Error(
         `Access forbidden. Your GitHub token doesn't have permission to access this repository.\n` +
-          `   Make sure your token has the 'repo' scope for private repositories.`
+          `   Make sure your token has the 'repo' scope for private repositories.`,
       );
     }
 
@@ -115,7 +113,7 @@ export async function postPRComment(
   owner: string,
   repo: string,
   prNumber: number,
-  body: string
+  body: string,
 ): Promise<void> {
   await octokit.issues.createComment({
     owner,
@@ -132,7 +130,7 @@ export async function findExistingComment(
   octokit: Octokit,
   owner: string,
   repo: string,
-  prNumber: number
+  prNumber: number,
 ): Promise<number | null> {
   const { data: comments } = await octokit.issues.listComments({
     owner,
@@ -141,7 +139,7 @@ export async function findExistingComment(
   });
 
   const janusDocComment = comments.find((comment) =>
-    comment.body?.includes("## 📚 JanusDoc - Documentation Update Suggestions")
+    comment.body?.includes("## 📚 JanusDoc - Documentation Update Suggestions"),
   );
 
   return janusDocComment?.id ?? null;
@@ -155,7 +153,7 @@ export async function updatePRComment(
   owner: string,
   repo: string,
   commentId: number,
-  body: string
+  body: string,
 ): Promise<void> {
   await octokit.issues.updateComment({
     owner,
@@ -173,14 +171,9 @@ export async function upsertPRComment(
   owner: string,
   repo: string,
   prNumber: number,
-  body: string
+  body: string,
 ): Promise<void> {
-  const existingCommentId = await findExistingComment(
-    octokit,
-    owner,
-    repo,
-    prNumber
-  );
+  const existingCommentId = await findExistingComment(octokit, owner, repo, prNumber);
 
   if (existingCommentId) {
     await updatePRComment(octokit, owner, repo, existingCommentId, body);

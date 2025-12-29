@@ -2,31 +2,38 @@
   "name": "janusdoc",
   "version": "0.1.0",
   "description": "AI-powered documentation update suggester for PRs",
-  "type": "module",
-  "main": "./build/index.js",
-  "types": "./build/index.d.ts",
+  "keywords": [
+    "ai",
+    "cli",
+    "documentation",
+    "github",
+    "pr"
+  ],
+  "license": "MIT",
+  "author": "",
   "bin": {
     "janusdoc": "./build/index.js"
   },
   "files": [
-    "build"
+    "assets",
+    "build",
+    "LICENSE",
+    "README.md"
   ],
+  "type": "module",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
     "prepublishOnly": "npm run build",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
   },
-  "keywords": [
-    "documentation",
-    "cli",
-    "ai",
-    "github",
-    "pr"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@ai-sdk/openai": "^0.0.70",
     "@clack/prompts": "^0.8.2",
@@ -39,6 +46,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/yargs": "^17.0.33",
+    "oxfmt": "^0.20.0",
+    "oxlint": "^1.35.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"

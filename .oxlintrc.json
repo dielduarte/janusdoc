@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "typescript/no-explicit-any": "warn",
+    "eslint/no-unused-vars": "warn"
+  }
+}

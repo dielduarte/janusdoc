@@ -1,11 +1,11 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import type { JanusDocConfig } from '../types.js';
+import fs from "node:fs/promises";
+import path from "node:path";
+import type { JanusDocConfig } from "../types.js";
 
-const CONFIG_FILE = '.janusdoc.json';
-const CONFIG_DIR = '.janusdoc';
-const STYLEGUIDE_FILE = 'auto_styleguide.md';
-const EMBEDDINGS_FILE = 'embeddings.json';
+const CONFIG_FILE = ".janusdoc.json";
+const CONFIG_DIR = ".janusdoc";
+const STYLEGUIDE_FILE = "auto_styleguide.md";
+const EMBEDDINGS_FILE = "embeddings.json";
 
 /**
  * Get the path to the config file
@@ -52,18 +52,18 @@ export async function configExists(cwd: string = process.cwd()): Promise<boolean
  */
 export async function loadConfig(cwd: string = process.cwd()): Promise<JanusDocConfig> {
   const configPath = getConfigPath(cwd);
-  
+
   try {
-    const content = await fs.readFile(configPath, 'utf-8');
+    const content = await fs.readFile(configPath, "utf-8");
     const config = JSON.parse(content) as JanusDocConfig;
-    
+
     if (!config.docsPath) {
-      throw new Error('Invalid config: missing docsPath');
+      throw new Error("Invalid config: missing docsPath");
     }
-    
+
     return config;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new Error(`Config file not found. Run 'janusdoc init' first.`);
     }
     throw error;
@@ -73,9 +73,12 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<JanusDocC
 /**
  * Save the JanusDoc config to .janusdoc.json
  */
-export async function saveConfig(config: JanusDocConfig, cwd: string = process.cwd()): Promise<void> {
+export async function saveConfig(
+  config: JanusDocConfig,
+  cwd: string = process.cwd(),
+): Promise<void> {
   const configPath = getConfigPath(cwd);
-  await fs.writeFile(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+  await fs.writeFile(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
 }
 
 /**
@@ -83,11 +86,11 @@ export async function saveConfig(config: JanusDocConfig, cwd: string = process.c
  */
 export async function loadStyleguide(cwd: string = process.cwd()): Promise<string> {
   const styleguidePath = getStyleguidePath(cwd);
-  
+
   try {
-    return await fs.readFile(styleguidePath, 'utf-8');
+    return await fs.readFile(styleguidePath, "utf-8");
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new Error(`Styleguide not found. Run 'janusdoc init' first.`);
     }
     throw error;
@@ -100,10 +103,9 @@ export async function loadStyleguide(cwd: string = process.cwd()): Promise<strin
 export async function saveStyleguide(content: string, cwd: string = process.cwd()): Promise<void> {
   const configDir = getConfigDirPath(cwd);
   const styleguidePath = getStyleguidePath(cwd);
-  
+
   // Ensure .janusdoc directory exists
   await fs.mkdir(configDir, { recursive: true });
-  
-  await fs.writeFile(styleguidePath, content, 'utf-8');
-}
 
+  await fs.writeFile(styleguidePath, content, "utf-8");
+}

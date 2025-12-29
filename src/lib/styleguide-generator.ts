@@ -1,6 +1,6 @@
-import { generateText } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import type { DocFile } from '../types.js';
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
+import type { DocFile } from "../types.js";
 
 const STYLEGUIDE_PROMPT = `You are an expert technical writer. Analyze the following documentation files and extract a comprehensive style guide that captures the writing patterns, conventions, and style used.
 
@@ -26,12 +26,10 @@ export async function generateStyleguide(docs: DocFile[]): Promise<string> {
     return getDefaultStyleguide();
   }
 
-  const docsContent = docs
-    .map(doc => `### ${doc.path}\n\n${doc.content}`)
-    .join('\n\n---\n\n');
+  const docsContent = docs.map((doc) => `### ${doc.path}\n\n${doc.content}`).join("\n\n---\n\n");
 
   const { text } = await generateText({
-    model: openai('gpt-4o-mini'),
+    model: openai("gpt-4o-mini"),
     prompt: STYLEGUIDE_PROMPT + docsContent,
     maxTokens: 2000,
   });
@@ -78,4 +76,3 @@ _No existing documentation found. Using default style guide._
 - Use bullet points for lists of items
 `;
 }
-

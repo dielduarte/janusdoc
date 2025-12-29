@@ -19,9 +19,8 @@ Code changes:
  */
 export async function summarizeCodeChanges(diff: string): Promise<string> {
   // Truncate very large diffs to avoid token limits
-  const truncatedDiff = diff.length > 8000 
-    ? diff.slice(0, 8000) + "\n\n[... diff truncated ...]"
-    : diff;
+  const truncatedDiff =
+    diff.length > 8000 ? diff.slice(0, 8000) + "\n\n[... diff truncated ...]" : diff;
 
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
@@ -31,4 +30,3 @@ export async function summarizeCodeChanges(diff: string): Promise<string> {
 
   return text.trim();
 }
-

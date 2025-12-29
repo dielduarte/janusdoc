@@ -1,31 +1,20 @@
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import type {
-  DocFile,
-  ChangedFile,
-  AnalysisResult,
-  DocUpdateSuggestion,
-} from "../types.js";
+import type { DocFile, ChangedFile, AnalysisResult, DocUpdateSuggestion } from "../types.js";
 
 const SuggestionSchema = z.object({
-  docPath: z
-    .string()
-    .describe("Path to the documentation file that needs updating"),
+  docPath: z.string().describe("Path to the documentation file that needs updating"),
   reason: z
     .string()
-    .describe(
-      "Why this documentation needs to be updated based on the code changes"
-    ),
+    .describe("Why this documentation needs to be updated based on the code changes"),
   suggestedChanges: z
     .string()
     .describe("Specific suggestions for what to update in the documentation"),
 });
 
 const AnalysisResultSchema = z.object({
-  suggestions: z
-    .array(SuggestionSchema)
-    .describe("List of documentation files that need updating"),
+  suggestions: z.array(SuggestionSchema).describe("List of documentation files that need updating"),
   summary: z.string().describe("Brief summary of the analysis results"),
 });
 
@@ -65,7 +54,7 @@ export async function analyzeChanges(
   diff: string,
   changedFiles: ChangedFile[],
   docs: DocFile[],
-  styleguide: string
+  styleguide: string,
 ): Promise<AnalysisResult> {
   if (changedFiles.length === 0) {
     return {
@@ -83,10 +72,7 @@ export async function analyzeChanges(
 
   // Format docs for the prompt (higher limit since docs are pre-filtered)
   const docsFormatted = docs
-    .map(
-      (doc) =>
-        `### ${doc.path}\n\`\`\`\n${truncateContent(doc.content, 4000)}\n\`\`\``
-    )
+    .map((doc) => `### ${doc.path}\n\`\`\`\n${truncateContent(doc.content, 4000)}\n\`\`\``)
     .join("\n\n");
 
   // Format changed files summary
@@ -95,10 +81,7 @@ export async function analyzeChanges(
     .join("\n");
 
   // Build the prompt
-  const prompt = ANALYSIS_PROMPT.replace(
-    "{styleguide}",
-    truncateContent(styleguide, 1000)
-  )
+  const prompt = ANALYSIS_PROMPT.replace("{styleguide}", truncateContent(styleguide, 1000))
     .replace("{docs}", docsFormatted)
     .replace("{diff}", truncateContent(diff, 10000))
     .replace("{changedFiles}", changedFilesFormatted);
