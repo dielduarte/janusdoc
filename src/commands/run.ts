@@ -1,5 +1,5 @@
 import path from "node:path";
-import * as p from "@clack/prompts";
+import * as p from "../lib/ui.js";
 import { loadConfig, loadStyleguide } from "../lib/config.js";
 import { scanDocsDirectory } from "../lib/docs.js";
 import { getChangedFiles, getDiffPatch, filterCodeFiles } from "../lib/git.js";
@@ -26,14 +26,14 @@ import type { RunCommandOptions, DocFile } from "../types.js";
 export async function runCommand(options: RunCommandOptions): Promise<void> {
   const cwd = process.cwd();
 
-  // Suppress UI output in dry-run mode
-  const isDryRun = options.dryRun;
-
-  if (!isDryRun) {
-    p.intro("🔍 JanusDoc - Analyzing PR");
+  // Enable silent mode for dry-run
+  if (options.dryRun) {
+    p.setSilentMode(true);
   }
 
-  const spinner = isDryRun ? { start: () => {}, stop: () => {} } : p.spinner();
+  p.intro("🔍 JanusDoc - Analyzing PR");
+
+  const spinner = p.spinner();
 
   // Load configuration
   spinner.start("Loading configuration...");
@@ -50,9 +50,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   const prInfo = await getPRInfo(octokit, owner, repo, options.pr);
   spinner.stop(`PR #${prInfo.number}: ${prInfo.title}`);
 
-  if (!isDryRun) {
-    p.log.info(`Base: ${prInfo.baseBranch} ← Head: ${prInfo.headBranch}`);
-  }
+  p.log.info(`Base: ${prInfo.baseBranch} ← Head: ${prInfo.headBranch}`);
 
   // Get changed files
   spinner.start("Getting changed files...");
@@ -61,10 +59,8 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   spinner.stop(`Found ${allChangedFiles.length} changed files (${codeFiles.length} code files)`);
 
   if (codeFiles.length === 0) {
-    if (!isDryRun) {
-      p.log.success("No code changes detected. Nothing to analyze.");
-      p.outro("Done!");
-    }
+    p.log.success("No code changes detected. Nothing to analyze.");
+    p.outro("Done!");
     return;
   }
 
@@ -85,10 +81,8 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   spinner.stop(`Found ${allDocs.length} documentation file(s)`);
 
   if (allDocs.length === 0) {
-    if (!isDryRun) {
-      p.log.warn("No documentation files found. Nothing to analyze.");
-      p.outro("Done!");
-    }
+    p.log.warn("No documentation files found. Nothing to analyze.");
+    p.outro("Done!");
     return;
   }
 
@@ -118,25 +112,21 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
     spinner.stop(`Found ${relevantDocs.length} relevant doc(s) via semantic search`);
 
-    if (!isDryRun && relevantDocs.length > 0) {
+    if (relevantDocs.length > 0) {
       const docsList = relevantDocs.map((d) => `• ${d.path}`).join("\n");
       p.log.info(`Relevant docs:\n${docsList}`);
     }
   } else {
     // Fallback: use all docs (legacy behavior)
-    if (!isDryRun) {
-      p.log.warn(
-        "No embeddings found. Using all docs (run 'janusdoc init' to enable semantic search).",
-      );
-    }
+    p.log.warn(
+      "No embeddings found. Using all docs (run 'janusdoc init' to enable semantic search).",
+    );
     relevantDocs = allDocs;
   }
 
   if (relevantDocs.length === 0) {
-    if (!isDryRun) {
-      p.log.success("No relevant documentation found for these changes.");
-      p.outro("Done!");
-    }
+    p.log.success("No relevant documentation found for these changes.");
+    p.outro("Done!");
     return;
   }
 
@@ -173,19 +163,13 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
     spinner.stop("Comment posted successfully!");
 
     // Show suggestions summary
-    if (!isDryRun) {
-      const suggestionsList = result.suggestions
-        .map((s) => `• ${s.docPath}: ${s.updatedContent}`)
-        .join("\n");
-      p.note(suggestionsList, "Suggested Updates");
-    }
+    const suggestionsList = result.suggestions
+      .map((s) => `• ${s.docPath}: ${s.updatedContent}`)
+      .join("\n");
+    p.note(suggestionsList, "Suggested Updates");
   } else {
-    if (!isDryRun) {
-      p.log.success("No documentation updates needed.");
-    }
+    p.log.success("No documentation updates needed.");
   }
 
-  if (!isDryRun) {
-    p.outro("✨ Analysis complete!");
-  }
+  p.outro("✨ Analysis complete!");
 }
