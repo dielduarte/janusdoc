@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/janusdoc-logo.png" alt="Janusdoc Logo" width="250" />
+  <img src="https://github.com/dielduarte/janusdoc/blob/main/assets/janusdoc-logo.png?raw=true" alt="Janusdoc Logo" width="250" />
 </p>
 
 # Janusdoc
@@ -138,6 +138,7 @@ JanusDoc also creates a `.janusdoc/` directory containing:
 ## How It Works
 
 1. **Initialization**: JanusDoc scans your documentation and generates:
+
    - A style guide based on your existing docs
    - A documentation map describing each file's purpose and relationships
    - Vector embeddings for semantic search
