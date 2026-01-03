@@ -49,6 +49,7 @@ Initialize JanusDoc in your current project. This command will:
 - Generate a `.janusdoc.json` configuration file
 - Scan your existing documentation
 - Generate an AI-powered style guide based on your docs
+- Generate a documentation map describing each file's purpose and relationships
 - Create embeddings for semantic search
 
 **Options:**
@@ -109,8 +110,8 @@ After running `janusdoc init`, a `.janusdoc.json` file is created:
 | Option             | Type   | Default  | Description                                                       |
 | ------------------ | ------ | -------- | ----------------------------------------------------------------- |
 | `docsPath`         | string | `"docs"` | Path to your documentation directory                              |
-| `search.topN`      | number | `10`     | Maximum number of relevant docs to consider during analysis       |
-| `search.threshold` | number | `0.3`    | Minimum similarity score (0-1) for docs to be considered relevant |
+| `search.topN`      | number | `15`     | Maximum number of relevant docs to consider during analysis       |
+| `search.threshold` | number | `0.15`   | Minimum similarity score (0-1) for docs to be considered relevant |
 
 **Example with all options:**
 
@@ -131,15 +132,21 @@ After running `janusdoc init`, a `.janusdoc.json` file is created:
 JanusDoc also creates a `.janusdoc/` directory containing:
 
 - `auto_styleguide.md` - Auto-generated documentation style guide (can be customized)
+- `doc_map.md` - Documentation map describing each file's purpose, when to update it, and related files
 - `embeddings.json` - Vector embeddings for semantic search
 
 ## How It Works
 
-1. **Initialization**: JanusDoc scans your documentation, learns your style, and creates embeddings for efficient searching
+1. **Initialization**: JanusDoc scans your documentation and generates:
+   - A style guide based on your existing docs
+   - A documentation map describing each file's purpose and relationships
+   - Vector embeddings for semantic search
+
 2. **PR Analysis**: When analyzing a PR, JanusDoc:
    - Fetches the code changes from GitHub
-   - Summarizes the changes using AI
+   - Summarizes the changes using AI (including documentation impact)
    - Uses semantic search to find relevant documentation
+   - Uses the documentation map to understand file relationships
    - Analyzes whether documentation updates are needed
    - Posts suggestions as a PR comment
 
