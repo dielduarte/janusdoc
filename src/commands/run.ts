@@ -1,6 +1,6 @@
 import path from "node:path";
 import * as p from "../lib/ui.js";
-import { loadConfig, loadStyleguide } from "../lib/config.js";
+import { loadConfig, loadStyleguide, loadDocMap } from "../lib/config.js";
 import { scanDocsDirectory } from "../lib/docs.js";
 import { getChangedFiles, getDiffPatch, filterCodeFiles } from "../lib/git.js";
 import {
@@ -39,6 +39,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
   spinner.start("Loading configuration...");
   const config = await loadConfig(cwd);
   const styleguide = await loadStyleguide(cwd);
+  const docMap = await loadDocMap(cwd);
   spinner.stop(`Docs path: ${config.docsPath}`);
 
   // Initialize GitHub client
@@ -132,7 +133,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
 
   // Analyze changes with relevant docs only
   spinner.start("Analyzing changes with AI...");
-  const result = await analyzeChanges(diff, codeFiles, relevantDocs, styleguide);
+  const result = await analyzeChanges(diff, codeFiles, relevantDocs, styleguide, docMap);
   spinner.stop(result.summary);
 
   // If dry-run mode, output JSON and exit
@@ -148,6 +149,7 @@ export async function runCommand(options: RunCommandOptions): Promise<void> {
         pr: options.pr,
         repo: options.repo,
         filesChanged: codeFiles.map((f) => f.path),
+        relevantDocs: relevantDocs.map((d) => d.path),
         totalSuggestions: result.suggestions.length,
       },
     };

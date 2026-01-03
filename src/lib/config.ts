@@ -6,6 +6,7 @@ const CONFIG_FILE = ".janusdoc.json";
 const CONFIG_DIR = ".janusdoc";
 const STYLEGUIDE_FILE = "auto_styleguide.md";
 const EMBEDDINGS_FILE = "embeddings.json";
+const DOC_MAP_FILE = "doc_map.md";
 
 /**
  * Get the path to the config file
@@ -108,4 +109,40 @@ export async function saveStyleguide(content: string, cwd: string = process.cwd(
   await fs.mkdir(configDir, { recursive: true });
 
   await fs.writeFile(styleguidePath, content, "utf-8");
+}
+
+/**
+ * Get the path to the doc map file
+ */
+export function getDocMapPath(cwd: string = process.cwd()): string {
+  return path.join(cwd, CONFIG_DIR, DOC_MAP_FILE);
+}
+
+/**
+ * Load the doc map
+ */
+export async function loadDocMap(cwd: string = process.cwd()): Promise<string> {
+  const docMapPath = getDocMapPath(cwd);
+
+  try {
+    return await fs.readFile(docMapPath, "utf-8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return ""; // Doc map is optional
+    }
+    throw error;
+  }
+}
+
+/**
+ * Save the doc map
+ */
+export async function saveDocMap(content: string, cwd: string = process.cwd()): Promise<void> {
+  const configDir = getConfigDirPath(cwd);
+  const docMapPath = getDocMapPath(cwd);
+
+  // Ensure .janusdoc directory exists
+  await fs.mkdir(configDir, { recursive: true });
+
+  await fs.writeFile(docMapPath, content, "utf-8");
 }

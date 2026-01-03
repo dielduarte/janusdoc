@@ -1,14 +1,21 @@
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 
-const SUMMARIZE_PROMPT = `You are a technical writer. Summarize the following code changes in 2-3 sentences of natural language.
+const SUMMARIZE_PROMPT = `You are a technical writer. Summarize the following code changes, then identify what types of documentation might need updates.
 
-Focus on:
+Part 1 - Summary (2-3 sentences):
 - What functionality was added, modified, or removed
 - What user-facing features or behaviors changed
-- What APIs, configurations, or integrations were affected
 
-Be concise and focus on the conceptual meaning, not the implementation details.
+Part 2 - Documentation Impact:
+Based on the nature of the changes, list what KINDS of documentation might need updates. Think broadly about:
+- Reference documentation (APIs, types, interfaces, commands, components)
+- Examples and tutorials
+- Configuration and setup
+- Conceptual guides
+- Any other documentation categories relevant to these specific changes
+
+Be concise but comprehensive about documentation impact.
 
 Code changes:
 `;
@@ -25,7 +32,7 @@ export async function summarizeCodeChanges(diff: string): Promise<string> {
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
     prompt: SUMMARIZE_PROMPT + truncatedDiff,
-    maxTokens: 200,
+    maxTokens: 400,
   });
 
   return text.trim();

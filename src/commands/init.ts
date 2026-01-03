@@ -1,9 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as p from "@clack/prompts";
-import { saveConfig, saveStyleguide, configExists } from "../lib/config.js";
+import { saveConfig, saveStyleguide, saveDocMap, configExists } from "../lib/config.js";
 import { scanDocsDirectory, summarizeDocs } from "../lib/docs.js";
 import { generateStyleguide } from "../lib/styleguide-generator.js";
+import { generateDocMap } from "../lib/doc-map-generator.js";
 import { generateDocEmbeddings, saveEmbeddings } from "../lib/embeddings.js";
 import type { InitCommandOptions, JanusDocConfig } from "../types.js";
 
@@ -154,6 +155,23 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
     } else {
       spinner.stop("Failed to generate style guide");
       throw error;
+    }
+  }
+
+  // Generate doc map
+  if (docs.length > 0) {
+    spinner.start("Generating documentation map...");
+    try {
+      const docMap = await generateDocMap(summarized);
+      await saveDocMap(docMap, cwd);
+      spinner.stop("Created .janusdoc/doc_map.md");
+    } catch (error) {
+      if ((error as Error).message?.includes("API key")) {
+        spinner.stop("Skipped doc map (no API key)");
+      } else {
+        spinner.stop("Failed to generate doc map");
+        throw error;
+      }
     }
   }
 
