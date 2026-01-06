@@ -1,68 +1,46 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as p from "@clack/prompts";
+import {
+  withSpinner,
+  handleApiKeyError,
+  directoryExists,
+  findDocsDirectory,
+  type Spinner,
+} from "../lib/pipeline.js";
 import { saveConfig, saveStyleguide, saveDocMap, configExists } from "../lib/config.js";
 import { scanDocsDirectory, summarizeDocs } from "../lib/docs.js";
 import { generateStyleguide } from "../lib/styleguide-generator.js";
 import { generateDocMap } from "../lib/doc-map-generator.js";
 import { generateDocEmbeddings, saveEmbeddings } from "../lib/embeddings.js";
-import type { InitCommandOptions, JanusDocConfig } from "../types.js";
+import type { InitCommandOptions, JanusDocConfig, DocFile } from "../types.js";
 
-/**
- * Check if a directory exists
- */
-async function directoryExists(dirPath: string): Promise<boolean> {
-  try {
-    const stat = await fs.stat(dirPath);
-    return stat.isDirectory();
-  } catch {
+async function checkExistingConfig(cwd: string): Promise<boolean> {
+  if (!(await configExists(cwd))) {
+    return true;
+  }
+
+  const shouldOverwrite = await p.confirm({
+    message: "JanusDoc is already initialized. Overwrite?",
+    initialValue: false,
+  });
+
+  if (p.isCancel(shouldOverwrite) || !shouldOverwrite) {
+    p.cancel("Initialization cancelled.");
     return false;
   }
+
+  return true;
 }
 
-/**
- * Find existing docs directory
- */
-async function findDocsDirectory(cwd: string): Promise<string | undefined> {
-  const commonPaths = ["docs", "documentation", "doc"];
-
-  for (const dir of commonPaths) {
-    const fullPath = path.join(cwd, dir);
-    if (await directoryExists(fullPath)) {
-      return dir;
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * Initialize JanusDoc configuration
- */
-export async function initCommand(options: InitCommandOptions): Promise<void> {
-  const cwd = process.cwd();
-
-  p.intro("🚀 JanusDoc Setup");
-
-  // Check if already initialized
-  if (await configExists(cwd)) {
-    const shouldOverwrite = await p.confirm({
-      message: "JanusDoc is already initialized. Overwrite?",
-      initialValue: false,
-    });
-
-    if (p.isCancel(shouldOverwrite) || !shouldOverwrite) {
-      p.cancel("Initialization cancelled.");
-      process.exit(0);
-    }
-  }
-
-  // Get docs path
+async function resolveDocsPath(
+  cwd: string,
+  options: InitCommandOptions,
+): Promise<string | null> {
   let docsPath = options.docsPath;
   let docsVerified = false;
 
   if (!docsPath) {
-    // Try to find existing docs directory
     const detectedPath = await findDocsDirectory(cwd);
 
     if (detectedPath) {
@@ -81,21 +59,17 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
 
     if (p.isCancel(inputPath)) {
       p.cancel("Initialization cancelled.");
-      process.exit(0);
+      return null;
     }
 
     docsPath = inputPath;
 
-    // If user accepted the detected path, it's already verified
     if (detectedPath && docsPath === detectedPath) {
       docsVerified = true;
     }
   }
 
-  // Normalize the path (remove ./ prefix if present)
   docsPath = docsPath.replace(/^\.\//, "");
-
-  // Validate docs path (skip if already verified)
   const absoluteDocsPath = path.join(cwd, docsPath);
 
   if (!docsVerified && !(await directoryExists(absoluteDocsPath))) {
@@ -106,7 +80,7 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
 
     if (p.isCancel(shouldCreate)) {
       p.cancel("Initialization cancelled.");
-      process.exit(0);
+      return null;
     }
 
     if (shouldCreate) {
@@ -114,42 +88,36 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
       p.log.success(`Created directory: ${docsPath}`);
     } else {
       p.cancel("Initialization cancelled.");
-      process.exit(0);
+      return null;
     }
   }
 
-  // Save config
-  const config: JanusDocConfig = {
-    docsPath,
-  };
+  return docsPath;
+}
 
+async function createConfig(cwd: string, docsPath: string): Promise<void> {
+  const config: JanusDocConfig = { docsPath };
   await saveConfig(config, cwd);
   p.log.success("Created .janusdoc.json");
+}
 
-  // Scan docs
-  const spinner = p.spinner();
-
-  spinner.start("Scanning documentation...");
-  const docs = await scanDocsDirectory(absoluteDocsPath);
-  spinner.stop(`Found ${docs.length} documentation file(s)`);
-
-  // Generate style guide
+async function generateStyleguideAsset(
+  cwd: string,
+  summarized: DocFile[],
+  spinner: Spinner,
+): Promise<void> {
   spinner.start("Generating style guide with AI...");
-  const summarized = summarizeDocs(docs);
 
   try {
     const styleguide = await generateStyleguide(summarized);
     await saveStyleguide(styleguide, cwd);
     spinner.stop("Created .janusdoc/auto_styleguide.md");
   } catch (error) {
-    if ((error as Error).message?.includes("API key")) {
-      spinner.stop("OpenAI API key not found");
+    if (handleApiKeyError(error, spinner, { operation: "style guide" })) {
       p.log.warn("Set OPENAI_API_KEY environment variable for AI-powered features.");
       p.log.info("Using default style guide instead.");
 
-      // Save default styleguide
-      const { generateStyleguide: gen } = await import("../lib/styleguide-generator.js");
-      const defaultGuide = await gen([]);
+      const defaultGuide = await generateStyleguide([]);
       await saveStyleguide(defaultGuide, cwd);
       p.log.success("Created .janusdoc/auto_styleguide.md (default)");
     } else {
@@ -157,41 +125,89 @@ export async function initCommand(options: InitCommandOptions): Promise<void> {
       throw error;
     }
   }
+}
 
-  // Generate doc map
-  if (docs.length > 0) {
-    spinner.start("Generating documentation map...");
-    try {
-      const docMap = await generateDocMap(summarized);
-      await saveDocMap(docMap, cwd);
-      spinner.stop("Created .janusdoc/doc_map.md");
-    } catch (error) {
-      if ((error as Error).message?.includes("API key")) {
-        spinner.stop("Skipped doc map (no API key)");
-      } else {
-        spinner.stop("Failed to generate doc map");
-        throw error;
-      }
+async function generateDocMapAsset(
+  cwd: string,
+  summarized: DocFile[],
+  spinner: Spinner,
+): Promise<void> {
+  spinner.start("Generating documentation map...");
+
+  try {
+    const docMap = await generateDocMap(summarized);
+    await saveDocMap(docMap, cwd);
+    spinner.stop("Created .janusdoc/doc_map.md");
+  } catch (error) {
+    if (!handleApiKeyError(error, spinner, { operation: "doc map" })) {
+      spinner.stop("Failed to generate doc map");
+      throw error;
     }
   }
+}
 
-  // Generate embeddings for semantic search
-  if (docs.length > 0) {
-    spinner.start("Generating embeddings for semantic search...");
-    try {
-      const embeddedDocs = await generateDocEmbeddings(docs);
-      await saveEmbeddings(embeddedDocs, cwd);
-      spinner.stop(`Created .janusdoc/embeddings.json (${docs.length} docs embedded)`);
-    } catch (error) {
-      if ((error as Error).message?.includes("API key")) {
-        spinner.stop("Skipped embeddings (no API key)");
-        p.log.warn("Embeddings require OPENAI_API_KEY. Semantic search will be disabled.");
-      } else {
-        spinner.stop("Failed to generate embeddings");
-        throw error;
-      }
+async function generateEmbeddingsAsset(
+  cwd: string,
+  docs: DocFile[],
+  spinner: Spinner,
+): Promise<void> {
+  spinner.start("Generating embeddings for semantic search...");
+
+  try {
+    const embeddedDocs = await generateDocEmbeddings(docs);
+    await saveEmbeddings(embeddedDocs, cwd);
+    spinner.stop(`Created .janusdoc/embeddings.json (${docs.length} docs embedded)`);
+  } catch (error) {
+    if (
+      !handleApiKeyError(error, spinner, {
+        operation: "embeddings",
+        skipMessage: "Embeddings require OPENAI_API_KEY. Semantic search will be disabled.",
+      })
+    ) {
+      spinner.stop("Failed to generate embeddings");
+      throw error;
     }
   }
+}
+
+async function generateAssets(cwd: string, docsPath: string): Promise<void> {
+  const spinner = p.spinner();
+  const absoluteDocsPath = path.join(cwd, docsPath);
+
+  const docs = await withSpinner(
+    spinner,
+    "Scanning documentation...",
+    () => scanDocsDirectory(absoluteDocsPath),
+    (d) => `Found ${d.length} documentation file(s)`,
+  );
+
+  const summarized = summarizeDocs(docs);
+
+  await generateStyleguideAsset(cwd, summarized, spinner);
+
+  if (docs.length > 0) {
+    await generateDocMapAsset(cwd, summarized, spinner);
+    await generateEmbeddingsAsset(cwd, docs, spinner);
+  }
+}
+
+export async function initCommand(options: InitCommandOptions): Promise<void> {
+  const cwd = process.cwd();
+
+  p.intro("🚀 JanusDoc Setup");
+
+  const canProceed = await checkExistingConfig(cwd);
+  if (!canProceed) {
+    process.exit(0);
+  }
+
+  const docsPath = await resolveDocsPath(cwd, options);
+  if (!docsPath) {
+    process.exit(0);
+  }
+
+  await createConfig(cwd, docsPath);
+  await generateAssets(cwd, docsPath);
 
   p.note(
     `1. Review and customize .janusdoc/auto_styleguide.md\n2. Add janusdoc to your CI/CD pipeline:\n   janusdoc run --pr <number> --repo <owner/repo>`,

@@ -1,17 +1,13 @@
-/**
- * Main configuration stored in .janusdoc.json
- */
+import type { Octokit } from "@octokit/rest";
+
 export interface JanusDocConfig {
   docsPath: string;
   search?: {
-    topN?: number; // Max docs to consider (default: 10)
-    threshold?: number; // Similarity threshold (default: 0.3)
+    topN?: number;
+    threshold?: number;
   };
 }
 
-/**
- * PR information fetched from GitHub API
- */
 export interface PRInfo {
   number: number;
   title: string;
@@ -21,9 +17,6 @@ export interface PRInfo {
   repo: string;
 }
 
-/**
- * A changed file from the git diff
- */
 export interface ChangedFile {
   path: string;
   additions: number;
@@ -31,34 +24,22 @@ export interface ChangedFile {
   patch?: string;
 }
 
-/**
- * A documentation file with its content
- */
 export interface DocFile {
   path: string;
   content: string;
 }
 
-/**
- * A suggestion for a doc that needs updating
- */
 export interface DocUpdateSuggestion {
   docPath: string;
   reason: string;
   updatedContent: string;
 }
 
-/**
- * Result from the AI analyzer
- */
 export interface AnalysisResult {
   suggestions: DocUpdateSuggestion[];
   summary: string;
 }
 
-/**
- * CLI run command options
- */
 export interface RunCommandOptions {
   pr: number;
   repo: string;
@@ -66,9 +47,38 @@ export interface RunCommandOptions {
   dryRun?: boolean;
 }
 
-/**
- * CLI init command options
- */
 export interface InitCommandOptions {
   docsPath?: string;
+}
+
+export interface RunContext {
+  cwd: string;
+  config: JanusDocConfig;
+  styleguide: string;
+  docMap: string;
+}
+
+export interface GitHubContext extends RunContext {
+  octokit: Octokit;
+  owner: string;
+  repo: string;
+  prInfo: PRInfo;
+}
+
+export interface ChangesContext extends GitHubContext {
+  codeFiles: ChangedFile[];
+  diff: string;
+}
+
+export interface DocsContext extends ChangesContext {
+  allDocs: DocFile[];
+  absoluteDocsPath: string;
+}
+
+export interface RelevantDocsContext extends DocsContext {
+  relevantDocs: DocFile[];
+}
+
+export interface AnalysisContext extends RelevantDocsContext {
+  result: AnalysisResult;
 }
