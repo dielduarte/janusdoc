@@ -11,6 +11,9 @@
   ],
   "license": "MIT",
   "author": "",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "bin": {
     "janusdoc": "./build/index.js"
   },
