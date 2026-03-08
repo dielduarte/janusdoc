@@ -20,6 +20,9 @@
     "LICENSE",
     "README.md"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
