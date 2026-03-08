@@ -181,7 +181,7 @@ jobs:
 
 ## Requirements
 
-- Node.js 18 or higher
+- Node.js 20 or higher
 - GitHub personal access token with `repo` scope
 - OpenAI API key for AI-powered features
 
