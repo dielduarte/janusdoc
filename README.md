@@ -2,7 +2,7 @@
   <img src="https://github.com/dielduarte/janusdoc/blob/main/assets/janusdoc-logo.png?raw=true" alt="Janusdoc Logo" width="250" />
 </p>
 
-# Janusdoc
+# Testing Multi Repos
 
 <p align="center">
   <a href="#installation">Installation</a> •
